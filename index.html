@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>테더 KRW-USDT 백테스터 v2.3</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--line:#334155;--muted:#94a3b8;--text:#e5e7eb;--input:#020617;--blue:#0ea5e9;--green:#22c55e;--red:#fb7185;--amber:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif}
+header{padding:22px 28px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:3}
+h1{margin:0 0 6px;font-size:24px}.sub{color:var(--muted);font-size:14px;line-height:1.5}
+main{padding:22px;max-width:1500px;margin:auto}.layout{display:grid;grid-template-columns:minmax(330px,390px) 1fr;gap:18px}@media(max-width:1000px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 28px #0005}.sec{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}h2{font-size:17px;margin:0 0 10px}
+label{display:block;color:var(--muted);font-size:13px;margin:9px 0 5px}input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--input);color:var(--text);font-size:14px}input[type="checkbox"]{width:auto;vertical-align:middle;margin-right:6px}
+button{cursor:pointer;font-weight:700;transition:filter .15s,transform .15s}button:hover{filter:brightness(1.12)}button:active{transform:translateY(1px)}button:disabled{cursor:not-allowed;filter:grayscale(.8);opacity:.55}.run{background:linear-gradient(135deg,#0284c7,var(--green));border:0;margin-top:14px}.gray{background:#1e293b}.red{background:#7f1d1d}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.small{font-size:12px;color:var(--muted);line-height:1.5}.status{white-space:pre-wrap;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px;color:#cbd5e1;font-size:13px;line-height:1.5}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.cards{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
+.card{background:#1f2937;border:1px solid var(--line);border-radius:14px;padding:14px}.k{font-size:12px;color:var(--muted)}.v{font-size:22px;font-weight:800;margin-top:6px}.pos{color:var(--green)}.neg{color:var(--red)}.info{background:#082f49;border:1px solid var(--blue);border-radius:12px;padding:12px;color:#dbeafe;font-size:13px;line-height:1.6;margin-bottom:14px}.warn{background:#422006;border:1px solid var(--amber);border-radius:12px;padding:12px;color:#fde68a;font-size:13px;line-height:1.6;margin-top:14px}
+.table{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:14px}table{border-collapse:collapse;width:100%;min-width:1320px;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:right;white-space:nowrap}th{position:sticky;top:0;background:var(--panel);color:#cbd5e1;z-index:1}th:first-child,td:first-child{text-align:left}tbody tr:hover{background:#1e293b}
+progress{width:100%;height:12px;accent-color:#38bdf8}.hidden{display:none}.error{border-color:var(--red)!important}.ok{color:#86efac}.bad{color:#fecaca}
+</style>
+</head>
+<body>
+<header>
+<h1>테더 KRW-USDT 동적 추적형 롱 그리드 백테스터 v2.3</h1>
+<div class="sub">CSV 파일을 브라우저에서 직접 읽어 실행합니다. 서버 업로드 없이 PC 안에서 계산합니다.</div>
+</header>
+<main>
+<div class="layout">
+<aside class="panel">
+<h2>1. CSV 파일</h2>
+<input id="file" type="file" accept=".csv,.txt,text/csv,text/plain">
+<div class="small" style="margin-top:8px">권장: bithumb_KRW-USDT_1m_bt_ready.csv 또는 upbit_KRW-USDT_1m_bt_ready.csv</div>
+<div id="fileStatus" class="status" style="margin-top:10px">파일을 선택하세요.</div>
+
+<div id="mapping" class="sec hidden">
+<h2>2. 열 매핑</h2>
+<div class="row"><div><label for="cTime">시간</label><select id="cTime"></select></div><div><label for="cTrade">거래가능</label><select id="cTrade"></select></div></div>
+<div class="row"><div><label for="cOpen">Open</label><select id="cOpen"></select></div><div><label for="cHigh">High</label><select id="cHigh"></select></div></div>
+<div class="row"><div><label for="cLow">Low</label><select id="cLow"></select></div><div><label for="cClose">Close</label><select id="cClose"></select></div></div>
+<div class="row"><div><label for="cVolKrw">Volume KRW</label><select id="cVolKrw"></select></div><div><label for="cHighFill">high_for_fill</label><select id="cHighFill"></select></div></div>
+<div class="row"><div><label for="cLowFill">low_for_fill</label><select id="cLowFill"></select></div><div><label for="cCloseVal">close_for_valuation</label><select id="cCloseVal"></select></div></div>
+</div>
+
+<div class="sec">
+<h2>3. 기간</h2>
+<div class="row"><div><label for="start">시작</label><input id="start" type="datetime-local"></div><div><label for="end">종료</label><input id="end" type="datetime-local"></div></div>
+<button class="gray" id="fullRange" type="button">전체 기간 입력</button>
+</div>
+
+<div class="sec">
+<h2>4. 투자 조건</h2>
+<label for="capital">초기 투자금</label><input id="capital" type="number" value="100000000" min="0" step="1000000">
+<div class="row"><div><label for="buyFee">매수 수수료 %</label><input id="buyFee" type="number" value="0.04" min="0" step="0.01"></div><div><label for="sellFee">매도 수수료 %</label><input id="sellFee" type="number" value="0.04" min="0" step="0.01"></div></div>
+<div class="row"><div><label for="minN">최소 간격 n</label><input id="minN" type="number" value="2" min="1" step="1"></div><div><label for="maxN">최대 간격 n</label><input id="maxN" type="number" value="10" min="1" step="1"></div></div>
+<label for="orderMode">주문금액</label><select id="orderMode"><option value="n40">n / 40억원</option><option value="fixed">고정 금액</option></select>
+<label for="fixedAmt">고정 주문금액</label><input id="fixedAmt" type="number" value="5000000" min="0" step="100000">
+</div>
+
+<div class="sec">
+<h2>5. 체결 조건</h2>
+<label for="model">모델</label><select id="model"><option value="both">기준형+보수형</option><option value="base">기준형만</option><option value="cons">보수형만</option></select>
+<div class="row"><div><label for="basePart">기준형 참여율 %</label><input id="basePart" type="number" value="0.5" min="0" step="0.1"></div><div><label for="consPart">보수형 참여율 %</label><input id="consPart" type="number" value="0.1" min="0" step="0.05"></div></div>
+<div class="row"><div><label for="baseBuf">기준형 버퍼 원</label><input id="baseBuf" type="number" value="1" min="0" step="1"></div><div><label for="consBuf">보수형 버퍼 원</label><input id="consBuf" type="number" value="2" min="0" step="1"></div></div>
+<div class="row"><div><label for="baseCd">기준형 쿨다운 분</label><input id="baseCd" type="number" value="1" min="0" step="1"></div><div><label for="consCd">보수형 쿨다운 분</label><input id="consCd" type="number" value="3" min="0" step="1"></div></div>
+<label><input id="useTrade" type="checkbox" checked>is_tradeable=False 행 체결 금지</label>
+</div>
+
+<button id="run" class="run" type="button" disabled>백테스트 실행</button>
+<div class="row"><button id="export" class="gray" type="button" disabled>결과 CSV 저장</button><button id="clear" class="red" type="button">결과 초기화</button></div>
+<div style="margin-top:10px"><progress id="prog" value="0" max="100"></progress></div>
+<div id="status" class="status" style="margin-top:10px">대기 중</div>
+</aside>
+
+<section>
+<div class="info"><b>v2.3 규칙</b><br>가격이 상승하든 하락하든 n원 레벨에 도달하면 신규 매수 로트를 만들고, 각 로트를 매수가+n원에 매도합니다. 같은 레벨에서 기존 로트 매도와 신규 로트 매수를 허용하되 새로 산 로트의 매도는 다음 1분부터 가능합니다.</div>
+<div class="cards">
+<div class="card"><div class="k">불러온 행</div><div id="rows" class="v">-</div></div>
+<div class="card"><div class="k">선택 기간 행</div><div id="filtered" class="v">-</div></div>
+<div class="card"><div class="k">최고 총수익률</div><div id="bestRet" class="v">-</div></div>
+<div class="card"><div class="k">최고 조합</div><div id="bestCombo" class="v">-</div></div>
+</div>
+<div class="panel">
+<h2>결과표</h2>
+<div class="small" style="margin-bottom:8px">총수익률만 보지 말고 청산수익률, 실현손익, 미실현손익, 최대오픈원가, 최대낙폭, 미청산 로트 수를 함께 확인하세요.</div>
+<div class="table"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+</div>
+<div class="warn"><b>주의</b><br>1분봉 기반 근사 백테스트입니다. 실제 호가 대기열, 가격대별 체결량, 1분 내부 가격 순서는 알 수 없으므로 실제 수익을 보장하지 않습니다.</div>
+</section>
+</div>
+</main>
+
+<script>
+'use strict';
+const state={raw:[],head:[],data:[],results:[]};
+const $=id=>document.getElementById(id);
+const requiredMaps=['cTime','cOpen','cHigh','cLow','cClose','cVolKrw'];
+function setStatus(msg,isError=false){$('status').textContent=msg;$('status').classList.toggle('bad',isError)}
+function parseLine(s){const a=[];let c='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(ch==='"'){if(q&&s[i+1]==='"'){c+='"';i++}else q=!q}else if(ch===','&&!q){a.push(c);c=''}else c+=ch}a.push(c);return a}
+function parseCSV(t){const text=t.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');const lines=text.split('\n').filter(x=>x.trim().length);if(!lines.length)throw Error('CSV가 비어 있습니다.');const h=parseLine(lines[0]).map(x=>x.trim());if(!h.length||h.some(x=>!x))throw Error('헤더 행을 확인하세요. 빈 열 이름이 있습니다.');const r=[];for(let i=1;i<lines.length;i++){const v=parseLine(lines[i]);const o={};h.forEach((k,j)=>o[k]=(v[j]??'').trim());r.push(o)}return{h,r}}
+function norm(s){return String(s||'').toLowerCase().replace(/[\s_\-().]/g,'')}
+function find(cands){const hs=state.head.map(h=>({h,n:norm(h)}));for(const c of cands.map(norm)){const e=hs.find(x=>x.n===c);if(e)return e.h}for(const c of cands.map(norm)){const e=hs.find(x=>x.n.includes(c));if(e)return e.h}return''}
+function fill(id,sel,none=true){const el=$(id);el.innerHTML='';if(none)el.add(new Option('없음',''));state.head.forEach(h=>el.add(new Option(h,h)));if(sel&&state.head.includes(sel))el.value=sel}
+function automap(){fill('cTime',find(['candle_date_time_kst','timestamp_kst','datetime','time','date','timestamp']),false);fill('cTrade',find(['is_tradeable','tradeable']));fill('cOpen',find(['opening_price','open_price','open']),false);fill('cHigh',find(['high_price','high']),false);fill('cLow',find(['low_price','low']),false);fill('cClose',find(['trade_price','close_price','close']),false);fill('cVolKrw',find(['candle_acc_trade_price','volume_krw','acc_trade_price','krw_volume','value']),false);fill('cHighFill',find(['high_for_fill','highfill']));fill('cLowFill',find(['low_for_fill','lowfill']));fill('cCloseVal',find(['close_for_valuation','closevaluation']))}
+function num(x){const n=Number(String(x??'').replace(/,/g,''));return Number.isFinite(n)?n:NaN}
+function truth(x){if(x==null||x==='')return true;return['true','1','y','yes','가능','t'].includes(String(x).toLowerCase().trim())}
+function ptime(x){const s=String(x??'').trim();if(/^\d{13}$/.test(s))return new Date(+s);if(/^\d{10}$/.test(s))return new Date(+s*1000);return new Date(s.replace(' ','T').replace(/\./g,'-'))}
+function local(d){const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`}
+function readMapping(){const c={t:$('cTime').value,o:$('cOpen').value,h:$('cHigh').value,l:$('cLow').value,cl:$('cClose').value,v:$('cVolKrw').value,tr:$('cTrade').value,hf:$('cHighFill').value,lf:$('cLowFill').value,cv:$('cCloseVal').value};requiredMaps.forEach(id=>$(id).classList.toggle('error',!$(id).value));if([c.t,c.o,c.h,c.l,c.cl,c.v].some(x=>!x))throw Error('필수 열 매핑이 부족합니다. 시간/Open/High/Low/Close/Volume KRW를 확인하세요.');return c}
+function mapped(){const c=readMapping();const out=[];let skipped=0;for(const r of state.raw){const d=ptime(r[c.t]);const o=num(r[c.o]),h=num(r[c.h]),l=num(r[c.l]),cl=num(r[c.cl]);if(Number.isNaN(d.getTime())||![o,h,l,cl].every(Number.isFinite)){skipped++;continue}const hf=c.hf?num(r[c.hf]):h,lf=c.lf?num(r[c.lf]):l,cv=c.cv?num(r[c.cv]):cl;out.push({time:d,ms:d.getTime(),open:o,high:h,low:l,close:cl,vol:num(r[c.v])||0,trade:c.tr?truth(r[c.tr]):true,hf:Number.isFinite(hf)?hf:h,lf:Number.isFinite(lf)?lf:l,cv:Number.isFinite(cv)?cv:cl})}out.sort((a,b)=>a.ms-b.ms);out.skipped=skipped;return out}
+function krw(v){if(!Number.isFinite(v))return'-';const s=v<0?'-':'';let n=Math.abs(v);if(n>=1e8)return s+(n/1e8).toFixed(2)+'억';if(n>=1e4)return s+Math.round(n/1e4).toLocaleString()+'만';return s+Math.round(n).toLocaleString()}
+function pct(v){return Number.isFinite(v)?v.toFixed(4)+'%':'-'}
+function fnum(v){return Number.isFinite(v)?Number(v).toLocaleString(undefined,{maximumFractionDigits:2}):'-'}
+function inputNum(id,fallback){const n=Number($(id).value);return Number.isFinite(n)?n:fallback}
+function orderAmt(n){return $('orderMode').value==='fixed'?inputNum('fixedAmt',0):(n/40)*1e8}
+function selectedModels(){const m=$('model').value,a=[];if(m==='both'||m==='base')a.push({name:'기준형 v2.3',part:inputNum('basePart',0.5)/100,buf:inputNum('baseBuf',1),cd:Math.max(0,Math.round(inputNum('baseCd',1)))});if(m==='both'||m==='cons')a.push({name:'보수형 v2.3',part:inputNum('consPart',0.1)/100,buf:inputNum('consBuf',2),cd:Math.max(0,Math.round(inputNum('consCd',3)))});return a}
+function validateRun(rows,models,minN,maxN,opt){if(rows.length<2)throw Error('선택 기간 데이터가 부족합니다.');if(minN<1||maxN<1||minN>maxN)throw Error('간격 n 범위를 확인하세요. 최소값은 1 이상이고 최소≤최대여야 합니다.');if(opt.cap<=0)throw Error('초기 투자금은 0보다 커야 합니다.');if(opt.bfee<0||opt.sfee<0)throw Error('수수료는 음수일 수 없습니다.');if(!models.length)throw Error('실행할 모델이 없습니다.');if(models.some(m=>m.part<0||m.buf<0))throw Error('참여율과 버퍼는 음수일 수 없습니다.');if($('orderMode').value==='fixed'&&orderAmt(minN)<=0)throw Error('고정 주문금액은 0보다 커야 합니다.')}
+function runOne(rows,n,model,opt){
+ const initial=opt.cap,bfee=opt.bfee,sfee=opt.sfee,amt=orderAmt(n);let cash=initial,resCash=0,real=0,fees=0,lotId=1,ordId=1,lastLevel=Math.round(rows[0].cv),buyEv=0,sellEv=0,closed=0,pbuy=0,psell=0,cashShort=0,budgetShort=0,maxEq=initial,maxDD=0,maxOpen=0,maxLoss=0,maxResCash=0,maxResUsdt=0;const lots=[],orders=[],lastBuy=new Map();
+ const openLots=()=>lots.filter(l=>l.st!=='closed');
+ const resUsdt=()=>openLots().reduce((s,l)=>s+l.remUsdt,0);
+ const openCost=()=>openLots().reduce((s,l)=>s+l.remCost,0);
+ const equity=c=>cash+resCash+resUsdt()*c;
+ const upd=r=>{const eq=equity(r.cv);if(eq>maxEq)maxEq=eq;maxDD=Math.max(maxDD,(maxEq-eq)/maxEq*100);maxOpen=Math.max(maxOpen,openCost());maxLoss=Math.min(maxLoss,resUsdt()*r.cv-openCost());maxResCash=Math.max(maxResCash,resCash);maxResUsdt=Math.max(maxResUsdt,resUsdt())};
+ const canBuy=(price,i)=>!orders.some(o=>o.st!=='filled'&&o.price===price)&&(lastBuy.get(price)===undefined||i-lastBuy.get(price)>=model.cd);
+ const mkOrder=(price,i)=>{if(amt<5000)return null;const need=amt*(1+bfee);if(cash<need){cashShort++;return null}cash-=need;resCash+=need;lastBuy.set(price,i);const o={id:ordId++,price,orig:amt,rem:amt,res:need,st:'waiting',i};orders.push(o);return o};
+ const fillBuy=(o,budget,i,t)=>{const a=Math.min(o.rem,budget);if(a<=0)return 0;const fee=a*bfee;o.rem-=a;o.res-=a+fee;resCash-=a+fee;fees+=fee;buyEv++;if(o.rem<=1e-7){o.st='filled';if(o.res>0){cash+=o.res;resCash-=o.res;o.res=0}}else{o.st='partial';pbuy++}const usdt=a/o.price;lots.push({id:lotId++,buyT:t,buyMs:t.getTime(),buyP:o.price,buyN:a,buyFee:fee,remUsdt:usdt,remCost:a+fee,target:o.price+n,active:i+1,st:'open'});return a};
+ const buyAt=(price,budget,i,t)=>{let o=orders.find(x=>x.st!=='filled'&&x.price===price);if(!o&&canBuy(price,i))o=mkOrder(price,i);return o?fillBuy(o,budget,i,t):0};
+ const sellAt=(price,budget,i)=>{let used=0;const candidates=openLots().filter(l=>l.active<=i&&Math.abs(l.target-price)<1e-9&&l.remUsdt>1e-12).sort((a,b)=>a.buyMs-b.buyMs);for(const l of candidates){if(budget-used<=1e-9)break;const oldUsdt=l.remUsdt,u=Math.min(oldUsdt,(budget-used)/price),sn=u*price,fee=sn*sfee,cost=l.remCost*(u/oldUsdt),pnl=sn-fee-cost;l.remUsdt-=u;l.remCost-=cost;real+=pnl;fees+=fee;cash+=sn-fee;sellEv++;used+=sn;if(l.remUsdt<=1e-10){l.st='closed';closed++}else{l.st='partial';psell++}}return used};
+ if(cash>=amt*(1+bfee)&&amt>=5000){const fee=amt*bfee,usdt=amt/lastLevel;cash-=amt+fee;fees+=fee;buyEv++;lastBuy.set(lastLevel,0);lots.push({id:lotId++,buyT:rows[0].time,buyMs:rows[0].ms,buyP:lastLevel,buyN:amt,buyFee:fee,remUsdt:usdt,remCost:amt+fee,target:lastLevel+n,active:1,st:'open'})}
+ for(let i=0;i<rows.length;i++){const r=rows[i];if(opt.useTrade&&!r.trade){upd(r);continue}let budget=r.vol*model.part;if(budget<=0){upd(r);continue}const up=r.cv>=r.open,levels=[];
+  if(up){const start=Math.floor(lastLevel/n)*n;for(let p=start+n;p<=r.hf+1e-9;p+=n){if(p+model.buf<=r.hf+1e-9)levels.push(Math.round(p))}levels.sort((a,b)=>a-b);for(const level of levels){if(budget<=0)break;const sold=sellAt(level,budget,i);budget-=sold;if(budget<=0)break;const bought=buyAt(level,budget,i,r.time);budget-=bought}if(levels.length)lastLevel=levels.at(-1)}
+  else{const start=Math.ceil(lastLevel/n)*n;for(let p=start-n;p>=r.lf-1e-9;p-=n){if(p-model.buf>=r.lf-1e-9)levels.push(Math.round(p))}levels.sort((a,b)=>b-a);for(const level of levels){if(budget<=0)break;const bought=buyAt(level,budget,i,r.time);budget-=bought}if(levels.length)lastLevel=levels.at(-1)}
+  if(budget<=1e-9)budgetShort++;upd(r)}
+ const last=rows.at(-1),final=equity(last.cv),reservedUsdt=resUsdt(),open=openLots(),liq=cash+resCash+reservedUsdt*last.cv*(1-sfee),unreal=reservedUsdt*last.cv-openCost(),days=Math.max(1,(last.ms-rows[0].ms)/86400000);let maxHold=0;for(const l of open)maxHold=Math.max(maxHold,(last.ms-l.buyMs)/3600000);
+ return {model:model.name,n,orderAmount:amt,finalAsset:final,liquidationAsset:liq,totalReturn:(final-initial)/initial*100,liquidationReturn:(liq-initial)/initial*100,realizedPnl:real,unrealizedPnl:unreal,totalFees:fees,cash,reservedCash:resCash,reservedUsdt,buyEvents:buyEv,sellEvents:sellEv,closedLots:closed,partialBuys:pbuy,partialSells:psell,openLots:open.length,pendingBuys:orders.filter(o=>o.st!=='filled').length,pendingSells:open.length,maxOpenCost:maxOpen,maxDrawdown:maxDD,maxEvalLoss:maxLoss,maxReservedCash:maxResCash,maxReservedUsdt:maxResUsdt,cashShort,budgetShort,avgSellEventsPerDay:sellEv/days,avgClosedLotsPerDay:closed/days,maxOpenHoldHours:maxHold,capitalEfficiency:maxOpen?real/maxOpen*100:NaN};
+}
+function render(){const cols=[['model','모델'],['n','간격'],['orderAmount','주문금액'],['totalReturn','총수익률'],['liquidationReturn','청산수익률'],['realizedPnl','실현손익'],['unrealizedPnl','미실현손익'],['totalFees','수수료'],['buyEvents','매수'],['sellEvents','매도'],['closedLots','완료로트'],['openLots','미청산'],['pendingBuys','대기매수'],['pendingSells','대기매도'],['maxOpenCost','최대오픈원가'],['maxDrawdown','최대낙폭'],['capitalEfficiency','자본효율'],['cashShort','현금부족'],['budgetShort','예산부족'],['finalAsset','최종자산'],['liquidationAsset','청산자산']];$('tbl').querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c[1]}</th>`).join('')+'</tr>';$('tbl').querySelector('tbody').innerHTML=state.results.map(r=>'<tr>'+cols.map(([k])=>{let v=r[k];if(['orderAmount','realizedPnl','unrealizedPnl','totalFees','maxOpenCost','finalAsset','liquidationAsset'].includes(k))v=krw(v);else if(['totalReturn','liquidationReturn','maxDrawdown','capitalEfficiency'].includes(k))v=pct(v);else if(typeof v==='number')v=fnum(v);return`<td>${v}</td>`}).join('')+'</tr>').join('');$('export').disabled=!state.results.length;if(state.results.length){const b=[...state.results].sort((a,b)=>b.totalReturn-a.totalReturn)[0];$('bestRet').textContent=pct(b.totalReturn);$('bestRet').className='v '+(b.totalReturn>=0?'pos':'neg');$('bestCombo').textContent=`${b.model} · ${b.n}원`}else{$('bestRet').textContent='-';$('bestRet').className='v';$('bestCombo').textContent='-'}}
+$('file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;$('fileStatus').textContent=`읽는 중: ${f.name}`;$('run').disabled=true;try{const t=await f.text(),p=parseCSV(t);state.head=p.h;state.raw=p.r;automap();$('mapping').classList.remove('hidden');state.data=mapped();$('rows').textContent=state.data.length.toLocaleString();if(state.data.length){$('start').value=local(state.data[0].time);$('end').value=local(state.data.at(-1).time);$('run').disabled=false}$('fileStatus').textContent=`완료: ${f.name}\n원본 ${state.raw.length.toLocaleString()}행 / 유효 ${state.data.length.toLocaleString()}행 / 제외 ${state.data.skipped.toLocaleString()}행\n${state.data[0]?.time.toLocaleString()||''} ~ ${state.data.at(-1)?.time.toLocaleString()||''}`;setStatus('파일 로드 완료. 백테스트를 실행할 수 있습니다.')}catch(err){$('fileStatus').textContent='오류: '+err.message;setStatus('CSV 로드 오류: '+err.message,true)}});
+$('fullRange').addEventListener('click',()=>{if(!state.data.length)return;$('start').value=local(state.data[0].time);$('end').value=local(state.data.at(-1).time)});
+$('run').addEventListener('click',()=>{try{state.data=mapped();const s=$('start').value?new Date($('start').value).getTime():-Infinity,e=$('end').value?new Date($('end').value).getTime():Infinity;if(s>e)throw Error('시작 시간이 종료 시간보다 늦습니다.');const rows=state.data.filter(r=>r.ms>=s&&r.ms<=e);$('filtered').textContent=rows.length.toLocaleString();const opt={cap:inputNum('capital',1e8),bfee:inputNum('buyFee',0.04)/100,sfee:inputNum('sellFee',0.04)/100,useTrade:$('useTrade').checked};const mn=Math.round(inputNum('minN',2)),mx=Math.round(inputNum('maxN',10)),ms=selectedModels();validateRun(rows,ms,mn,mx,opt);state.results=[];$('prog').value=0;const total=(mx-mn+1)*ms.length;let done=0;for(const m of ms){for(let n=mn;n<=mx;n++){state.results.push(runOne(rows,n,m,opt));done++;$('prog').value=Math.round(done/total*100)}}render();setStatus(`완료\n기간 행 수: ${rows.length.toLocaleString()}\n결과: ${state.results.length}개 조합`)}catch(err){setStatus('오류: '+err.message,true)}});
+$('export').addEventListener('click',()=>{if(!state.results.length){setStatus('저장할 결과가 없습니다.');return}const cols=Object.keys(state.results[0]);const csv=[cols.join(',')].concat(state.results.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tether_backtest_results_v2_3.csv';a.click();URL.revokeObjectURL(a.href)});
+$('clear').addEventListener('click',()=>{state.results=[];render();setStatus('초기화했습니다.');$('prog').value=0;$('filtered').textContent='-'});
+render();
+</script>
+</body>
+</html>
